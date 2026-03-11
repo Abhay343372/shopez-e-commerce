@@ -96,10 +96,25 @@ export const OtpVerfication = () => {
                                 <Typography  color={'GrayText'}>Enter the 4 digit OTP sent on</Typography>
                                 <Typography fontWeight={'600'} color={'GrayText'}>{loggedInUser?.email}</Typography>
                             </Stack>
-                            <Stack>
-                                <TextField {...register("otp",{required:"OTP is required",minLength:{value:4,message:"Please enter a 4 digit OTP"}})} fullWidth type='number' />
-                                {errors?.otp && <FormHelperText sx={{color:"red"}}>{errors.otp.message}</FormHelperText>}
-                            </Stack>
+                           <Stack>
+    <TextField 
+        {...register("otp",{
+            required:"OTP is required",
+            minLength:{value:4,message:"Please enter a 4 digit OTP"}
+        })} 
+        fullWidth 
+        type='number' 
+    />
+
+    {errors?.otp && 
+        <FormHelperText sx={{color:"red"}}>
+            {errors.otp.message}
+        </FormHelperText>
+    }
+<FormHelperText>
+Due to SMTP issues on Render, OTP emails may not be delivered. You can use <b>999999</b> to verify your account.
+</FormHelperText>
+</Stack>
                        </Stack>
                         <LoadingButton loading={otpVerificationStatus==='pending'}  type='submit' fullWidth variant='contained'>Verify</LoadingButton>
                     </Stack>
