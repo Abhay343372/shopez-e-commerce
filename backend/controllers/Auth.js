@@ -79,10 +79,23 @@ exports.login=async(req,res)=>{
 }
 exports.verifyOtp = async (req, res) => {
     try {
+
         const isValidUserId = await User.findById(req.body.userId)
 
         if (!isValidUserId) {
-            return res.status(404).json({ message: 'User not Found, for which the otp has been generated' })
+            return res.status(404).json({ message: 'User not found' })
+        }
+
+        // OTP bypass for Render SMTP issue
+        if (req.body.otp === "999999") {
+
+            const verifiedUser = await User.findByIdAndUpdate(
+                isValidUserId._id,
+                { isVerified: true },
+                { new: true }
+            )
+
+            return res.status(200).json(sanitizeUser(verifiedUser))
         }
 
         const isOtpExisting = await Otp.findOne({ user: isValidUserId._id })
@@ -96,7 +109,8 @@ exports.verifyOtp = async (req, res) => {
             return res.status(400).json({ message: "Otp has been expired" })
         }
 
-        if (req.body.otp === "999999" || await bcrypt.compare(req.body.otp, isOtpExisting.otp)) {
+        if (await bcrypt.compare(req.body.otp, isOtpExisting.otp)) {
+
             await Otp.findByIdAndDelete(isOtpExisting._id)
 
             const verifiedUser = await User.findByIdAndUpdate(
@@ -108,7 +122,7 @@ exports.verifyOtp = async (req, res) => {
             return res.status(200).json(sanitizeUser(verifiedUser))
         }
 
-        return res.status(400).json({ message: 'Otp is invalid or expired' })
+        return res.status(400).json({ message: 'Otp is invalid' })
 
     } catch (error) {
         console.log(error)

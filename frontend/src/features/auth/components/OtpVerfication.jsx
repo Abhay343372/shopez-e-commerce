@@ -1,134 +1,141 @@
-import {Button, FormHelperText, Paper, Stack, TextField, Typography } from '@mui/material'
-import React, { useEffect} from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { clearOtpVerificationError, clearResendOtpError, clearResendOtpSuccessMessage, resendOtpAsync, resetOtpVerificationStatus, resetResendOtpStatus, selectLoggedInUser, selectOtpVerificationError, selectOtpVerificationStatus, selectResendOtpError, selectResendOtpStatus, selectResendOtpSuccessMessage, verifyOtpAsync } from '../AuthSlice'
-import { LoadingButton } from '@mui/lab'
-import { useNavigate } from 'react-router-dom'
-import { useForm } from "react-hook-form"
-import {toast} from 'react-toastify'
-
+import { FormHelperText, Paper, Stack, TextField, Typography } from "@mui/material";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  clearOtpVerificationError,
+  resetOtpVerificationStatus,
+  selectLoggedInUser,
+  selectOtpVerificationError,
+  selectOtpVerificationStatus,
+  verifyOtpAsync,
+} from "../AuthSlice";
+import { LoadingButton } from "@mui/lab";
+import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { toast } from "react-toastify";
 
 export const OtpVerfication = () => {
-    
-    const {register,handleSubmit,formState: { errors }} = useForm()
-    const dispatch=useDispatch()
-    const loggedInUser=useSelector(selectLoggedInUser)
-    const navigate=useNavigate()
-    const resendOtpStatus=useSelector(selectResendOtpStatus)
-    const resendOtpError=useSelector(selectResendOtpError)
-    const resendOtpSuccessMessage=useSelector(selectResendOtpSuccessMessage)
-    const otpVerificationStatus=useSelector(selectOtpVerificationStatus)
-    const otpVerificationError=useSelector(selectOtpVerificationError)
 
-    // handles the redirection
-    useEffect(()=>{
-        if(!loggedInUser){
-            navigate('/login')
-        }
-        else if(loggedInUser && loggedInUser?.isVerified){
-            navigate("/")
-        }
-    },[loggedInUser])
+  const { register, handleSubmit, formState: { errors } } = useForm();
 
-    const handleSendOtp=()=>{
-        const data={user:loggedInUser?._id}
-        dispatch(resendOtpAsync(data))
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const loggedInUser = useSelector(selectLoggedInUser);
+  const otpVerificationStatus = useSelector(selectOtpVerificationStatus);
+  const otpVerificationError = useSelector(selectOtpVerificationError);
+
+  // redirect logic
+  useEffect(() => {
+    if (!loggedInUser) {
+      navigate("/login");
+    } else if (loggedInUser?.isVerified) {
+      navigate("/");
     }
-    
-    const handleVerifyOtp=(data)=>{
-        const cred={...data,userId:loggedInUser?._id}
-        dispatch(verifyOtpAsync(cred))
+  }, [loggedInUser]);
+
+  // verify otp
+  const handleVerifyOtp = (data) => {
+    const payload = {
+      ...data,
+      userId: loggedInUser?._id,
+    };
+    dispatch(verifyOtpAsync(payload));
+  };
+
+  // error handling
+  useEffect(() => {
+    if (otpVerificationError) {
+      toast.error(otpVerificationError.message);
     }
 
-    // handles resend otp error
-    useEffect(()=>{
-        if(resendOtpError){
-            toast.error(resendOtpError.message)
-        }
-        return ()=>{
-            dispatch(clearResendOtpError())
-        }
-    },[resendOtpError])
+    return () => {
+      dispatch(clearOtpVerificationError());
+    };
+  }, [otpVerificationError]);
 
-    // handles resend otp success message
-    useEffect(()=>{
-        if(resendOtpSuccessMessage){
-            toast.success(resendOtpSuccessMessage.message)
-        }
-        return ()=>{
-            dispatch(clearResendOtpSuccessMessage())
-        }
-    },[resendOtpSuccessMessage])
+  // success handling
+  useEffect(() => {
+    if (otpVerificationStatus === "fullfilled") {
+      toast.success("Email verified successfully!");
+    }
 
-    // handles error while verifying otp
-    useEffect(()=>{
-        if(otpVerificationError){
-            toast.error(otpVerificationError.message)
-        }
-        return ()=>{
-            dispatch(clearOtpVerificationError())
-        }
-    },[otpVerificationError])
-
-    useEffect(()=>{
-        if(otpVerificationStatus==='fullfilled'){
-            toast.success("Email verified! We are happy to have you here")
-            dispatch(resetResendOtpStatus())
-        }
-        return ()=>{
-            dispatch(resetOtpVerificationStatus())
-        }
-    },[otpVerificationStatus])
+    return () => {
+      dispatch(resetOtpVerificationStatus());
+    };
+  }, [otpVerificationStatus]);
 
   return (
-    <Stack width={'100vw'} height={'100vh'} noValidate flexDirection={'column'} rowGap={3} justifyContent="center" alignItems="center" >
+    <Stack
+      width="100vw"
+      height="100vh"
+      justifyContent="center"
+      alignItems="center"
+      bgcolor="#f5f5f5"
+    >
+      <Paper
+        elevation={3}
+        sx={{
+          p: 4,
+          width: 380,
+          display: "flex",
+          flexDirection: "column",
+          rowGap: 3,
+        }}
+      >
+        <Typography variant="h5" fontWeight={600} textAlign="center">
+          Verify Your Email
+        </Typography>
 
-        
-        <Stack component={Paper} elevation={1} position={'relative'} justifyContent={'center'} alignItems={'center'} p={'2rem'} rowGap={'2rem'}>
-            
-            <Typography mt={4} variant='h5' fontWeight={500}>Verify Your Email Address</Typography>
+        <Stack component="form" rowGap={2} onSubmit={handleSubmit(handleVerifyOtp)}>
 
-            {
-                resendOtpStatus==='fullfilled'?(
-                    <Stack width={'100%'} rowGap={'1rem'} component={'form'} noValidate onSubmit={handleSubmit(handleVerifyOtp)}>
-                        <Stack rowGap={'1rem'}> 
-                            <Stack>
-                                <Typography  color={'GrayText'}>Enter the 4 digit OTP sent on</Typography>
-                                <Typography fontWeight={'600'} color={'GrayText'}>{loggedInUser?.email}</Typography>
-                            </Stack>
-                           <Stack>
-    <TextField 
-        {...register("otp",{
-            required:"OTP is required",
-            minLength:{value:4,message:"Please enter a 4 digit OTP"}
-        })} 
-        fullWidth 
-        type='number' 
-    />
+          <Stack>
+            <Typography variant="body2" color="text.secondary">
+              Enter OTP for
+            </Typography>
+            <Typography fontWeight={600}>
+              {loggedInUser?.email}
+            </Typography>
+          </Stack>
 
-    {errors?.otp && 
-        <FormHelperText sx={{color:"red"}}>
-            {errors.otp.message}
-        </FormHelperText>
-    }
-<FormHelperText>
-Due to SMTP issues on Render, OTP emails may not be delivered. You can use <b>999999</b> to verify your account.
-</FormHelperText>
-</Stack>
-                       </Stack>
-                        <LoadingButton loading={otpVerificationStatus==='pending'}  type='submit' fullWidth variant='contained'>Verify</LoadingButton>
-                    </Stack>
-                ):
-                <>
-                <Stack>
-                    <Typography color={'GrayText'}>We will send you a OTP on</Typography>
-                    <Typography fontWeight={'600'} color={'GrayText'}>{loggedInUser?.email}</Typography>
-                </Stack>
-                <LoadingButton onClick={handleSendOtp} loading={resendOtpStatus==='pending'} fullWidth variant='contained'>Get OTP</LoadingButton>
-                </>
-             }
+          <Stack>
+            <TextField
+              {...register("otp", {
+                required: "OTP is required",
+                minLength: {
+                  value: 4,
+                  message: "Please enter a 4 digit OTP",
+                },
+              })}
+              fullWidth
+              type="number"
+              label="OTP"
+            />
+
+            {errors?.otp && (
+              <FormHelperText error>
+                {errors.otp.message}
+              </FormHelperText>
+            )}
+
+            <FormHelperText>
+              SMTP email service is not working on Render.  
+              You can use <b>999999</b> as OTP.
+            </FormHelperText>
+          </Stack>
+
+          <LoadingButton
+            loading={otpVerificationStatus === "pending"}
+            type="submit"
+            variant="contained"
+            fullWidth
+            size="large"
+          >
+            Verify OTP
+          </LoadingButton>
 
         </Stack>
+      </Paper>
     </Stack>
-  )
-}
+  );
+};
