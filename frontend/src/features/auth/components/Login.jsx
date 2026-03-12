@@ -129,11 +129,11 @@ export const Login = () => {
             </Typography>
 
             <Typography fontSize={13} color="GrayText">
-              Email: demo@gmail.com
+              Email: abhay@gmail.com
             </Typography>
 
             <Typography fontSize={13} color="GrayText">
-              Password: helloWorld@123
+              Password: Abhay@1234
             </Typography>
           </Paper>
 
